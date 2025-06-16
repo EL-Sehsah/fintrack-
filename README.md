@@ -1,7 +1,7 @@
 # FinTrack - Personal Finance Dashboard
 
-![Demo Screenshot](/![image](https://github.com/user-attachments/assets/ee220f2d-f86a-4006-9c00-212a355f9f34)
-)
+![Demo Screenshot](/UI.png)
+
 
 A self-hosted, privacy-focused money management app to track expenses, budgets, and financial goals. No ads, no tracking, 100% client-side.
 
