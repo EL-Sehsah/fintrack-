@@ -21,4 +21,6 @@ FinTrack offers simple money tracking!
 
 ## Why?
 Most finance apps require signups or sell your data. FinTrack gives you full control over your financial data.
-Clone and open Fintrak.html to start tracking your finances in 10 seconds!
+
+
+Clone and open index.html to start tracking your finances in 10 seconds!
