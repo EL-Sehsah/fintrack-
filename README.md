@@ -2,9 +2,8 @@
 
 ![Demo Screenshot](/UI.png)
 
-Tired of complex finance apps? FinTrack offers simple money tracking without accounts or subscriptions
-A self-hosted, privacy-focused money management app to track expenses, budgets, and financial goals.
-No ads, no tracking, 100% client-side.
+Tired of complex finance apps? 
+FinTrack offers simple money tracking!
 
 ## Features
 - 💸 **Transaction tracking** (Income/Expenses)
