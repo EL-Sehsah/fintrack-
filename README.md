@@ -1,2 +1,23 @@
-# fintrack-
-A lightweight personal finance tracker with budgeting, goals, and transaction management. Works offline!
+# FinTrack - Personal Finance Dashboard
+
+![Demo Screenshot](/![image](https://github.com/user-attachments/assets/ee220f2d-f86a-4006-9c00-212a355f9f34)
+)
+
+A self-hosted, privacy-focused money management app to track expenses, budgets, and financial goals. No ads, no tracking, 100% client-side.
+
+## Features
+- 💸 **Transaction tracking** (Income/Expenses)
+- 📊 **Visual spending analytics**
+- 🎯 **Goal progress tracking**
+- 📱 **Mobile-friendly design**
+- 🔒 **Data stays on your device** (localStorage)
+
+
+
+## Tech Stack
+- Plain HTML/CSS/JS (No frameworks)
+- Chart.js for visualizations
+- Tailwind CSS for styling
+
+## Why?
+Most finance apps require signups or sell your data. FinTrack gives you full control over your financial data.
