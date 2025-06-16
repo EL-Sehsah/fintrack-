@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack - Personal Finance Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .chart-container {
+            height: 300px;
+        }
+        .transaction-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+        .input-error {
+            border-color: #ef4444;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="min-h-screen flex flex-col lg:flex-row">
+        <!-- Sidebar (Desktop) -->
+        <aside class="sidebar hidden lg:block w-64 bg-white shadow-lg">
+            <div class="p-6">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-wallet text-2xl text-indigo-600"></i>
+                    <h1 class="text-2xl font-bold text-indigo-800">FinTrack</h1>
+                </div>
+                <nav class="mt-12">
+                    <div class="space-y-4">
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-50 text-indigo-700">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Analytics</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Transactions</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i class="fas fa-wallet"></i>
+                            <span>Accounts</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i class="fas fa-bullseye"></i>
+                            <span>Goals</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Reports</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-100">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </div>
+                </nav>
+                <div class="mt-12 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-medium text-gray-700">Upgrade to Pro</h3>
+                    <p class="text-sm text-gray-500 mt-1">Get advanced features and insights</p>
+                    <button class="w-full mt-3 gradient-bg text-white py-2 rounded-lg text-sm font-medium">Upgrade Now</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="gradient-bg text-white shadow-lg">
+                <div class="container mx-auto px-4 py-6">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-4">
+                            <button id="sidebarToggle" class="lg:hidden">
+                                <i class="fas fa-bars text-2xl"></i>
+                            </button>
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-wallet text-2xl"></i>
+                                <h1 class="text-2xl font-bold">FinTrack</h1>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <button class="bg-white text-indigo-700 px-4 py-2 rounded-full font-medium hover:bg-indigo-50 transition">
+                                    <i class="fas fa-bell"></i>
+                                </button>
+                                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                            </div>
+                            <div class="relative group">
+                                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-indigo-700 font-bold cursor-pointer">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-grow container mx-auto px-4 py-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left Column -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Balance Card -->
+                            <div class="bg-white rounded-xl shadow-md p-6">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Total Balance</p>
+                                        <h2 class="text-2xl font-bold mt-1" id="totalBalance">$12,345.67</h2>
+                                    </div>
+                                    <div class="bg-green-100 text-green-800 p-2 rounded-full">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex justify-between text-sm">
+                                    <div>
+                                        <p class="text-gray-500">Income</p>
+                                        <p class="font-medium text-green-600" id="totalIncome">$5,432.10</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500">Expenses</p>
+                                        <p class="font-medium text-red-600" id="totalExpenses">$2,345.67</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Savings Card -->
+                            <div class="bg-white rounded-xl shadow-md p-6">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Savings</p>
+                                        <h2 class="text-2xl font-bold mt-1" id="savingsAmount">$3,210.50</h2>
+                                    </div>
+                                    <div class="bg-blue-100 text-blue-800 p-2 rounded-full">
+                                        <i class="fas fa-piggy-bank"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-600 h-2 rounded-full" id="savingsProgress" style="width: 65%"></div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">65% of your goal</p>
+                                </div>
+                            </div>
+
+                            <!-- Budget Card -->
+                            <div class="bg-white rounded-xl shadow-md p-6">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Monthly Budget</p>
+                                        <h2 class="text-2xl font-bold mt-1" id="monthlyBudget">$1,500.00</h2>
+                                    </div>
+                                    <div class="bg-purple-100 text-purple-800 p-2 rounded-full">
+                                        <i class="fas fa-chart-pie"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-purple-600 h-2 rounded-full" id="budgetProgress" style="width: 45%"></div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1" id="budgetRemaining">$675.00 remaining</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Spending Chart -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-xl font-bold">Spending Overview</h2>
+                                <select id="timePeriodSelect" class="bg-gray-100 border-0 rounded-lg px-3 py-2 text-sm">
+                                    <option value="month">This Month</option>
+                                    <option value="lastMonth">Last Month</option>
+                                    <option value="year">This Year</option>
+                                </select>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="spendingChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Recent Transactions -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-xl font-bold">Recent Transactions</h2>
+                                <button id="viewAllTransactions" class="text-indigo-600 font-medium hover:text-indigo-800 transition">
+                                    View All
+                                </button>
+                            </div>
+                            <div class="space-y-4" id="transactionsList">
+                                <!-- Transactions will be loaded here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-8">
+                        <!-- Quick Actions -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h2 class="text-xl font-bold mb-6">Quick Actions</h2>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button id="addTransactionBtn" class="bg-indigo-100 text-indigo-700 p-4 rounded-lg flex flex-col items-center justify-center hover:bg-indigo-200 transition">
+                                    <i class="fas fa-plus-circle text-2xl mb-2"></i>
+                                    <span>Add Transaction</span>
+                                </button>
+                                <button id="transferBtn" class="bg-green-100 text-green-700 p-4 rounded-lg flex flex-col items-center justify-center hover:bg-green-200 transition">
+                                    <i class="fas fa-exchange-alt text-2xl mb-2"></i>
+                                    <span>Transfer</span>
+                                </button>
+                                <button id="setGoalBtn" class="bg-blue-100 text-blue-700 p-4 rounded-lg flex flex-col items-center justify-center hover:bg-blue-200 transition">
+                                    <i class="fas fa-bullseye text-2xl mb-2"></i>
+                                    <span>Set Goal</span>
+                                </button>
+                                <button id="reportsBtn" class="bg-purple-100 text-purple-700 p-4 rounded-lg flex flex-col items-center justify-center hover:bg-purple-200 transition">
+                                    <i class="fas fa-chart-line text-2xl mb-2"></i>
+                                    <span>Reports</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Budget Breakdown -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h2 class="text-xl font-bold mb-6">Budget Breakdown</h2>
+                            <div class="space-y-4" id="budgetCategories">
+                                <!-- Budget categories will be loaded here dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Financial Goals -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-xl font-bold">Financial Goals</h2>
+                                <button id="addGoalBtn" class="text-indigo-600 font-medium hover:text-indigo-800 transition">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-4" id="goalsList">
+                                <!-- Goals will be loaded here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-40">
+        <div class="flex justify-around">
+            <a href="#" class="flex flex-col items-center justify-center p-4 text-indigo-600">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="#" class="flex flex-col items-center justify-center p-4 text-gray-500 hover:text-indigo-600">
+                <i class="fas fa-chart-pie text-xl"></i>
+                <span class="text-xs mt-1">Stats</span>
+            </a>
+            <a href="#" id="mobileAddBtn" class="flex flex-col items-center justify-center p-4 text-gray-500 hover:text-indigo-600">
+                <div class="gradient-bg text-white rounded-full p-3 -mt-8 shadow-lg">
+                    <i class="fas fa-plus text-xl"></i>
+                </div>
+                <span class="text-xs mt-2">Add</span>
+            </a>
+            <a href="#" class="flex flex-col items-center justify-center p-4 text-gray-500 hover:text-indigo-600">
+                <i class="fas fa-wallet text-xl"></i>
+                <span class="text-xs mt-1">Accounts</span>
+            </a>
+            <a href="#" class="flex flex-col items-center justify-center p-4 text-gray-500 hover:text-indigo-600">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="text-xs mt-1">Settings</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Add Transaction Modal -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" id="transactionModal">
+        <div class="bg-white rounded-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Add Transaction</h3>
+                    <button class="text-gray-500 hover:text-gray-700" id="closeModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="transactionForm">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Amount</label>
+                        <input type="number" id="transactionAmount" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0.00" required step="0.01" min="0.01">
+                        <div id="amountError" class="error-message hidden">Please enter a valid amount</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Category</label>
+                        <select id="transactionCategory" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                            <option value="">Select a category</option>
+                            <option value="Food & Dining">Food & Dining</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Housing">Housing</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Education">Education</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div id="categoryError" class="error-message hidden">Please select a category</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Date</label>
+                        <input type="date" id="transactionDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <div id="dateError" class="error-message hidden">Please select a date</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Description</label>
+                        <input type="text" id="transactionDescription" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Optional">
+                    </div>
+                    <div class="flex space-x-4 mb-4">
+                        <div class="flex items-center">
+                            <input type="radio" id="expense" name="transactionType" value="expense" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500" checked>
+                            <label for="expense" class="ml-2 block text-sm text-gray-700">Expense</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="income" name="transactionType" value="income" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500">
+                            <label for="income" class="ml-2 block text-sm text-gray-700">Income</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-medium hover:opacity-90 transition">
+                        Add Transaction
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Goal Modal -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" id="goalModal">
+        <div class="bg-white rounded-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Set Financial Goal</h3>
+                    <button class="text-gray-500 hover:text-gray-700" id="closeGoalModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="goalForm">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Goal Name</label>
+                        <input type="text" id="goalName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Vacation Fund" required>
+                        <div id="goalNameError" class="error-message hidden">Please enter a goal name</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Target Amount</label>
+                        <input type="number" id="goalTarget" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0.00" required step="0.01" min="0.01">
+                        <div id="goalTargetError" class="error-message hidden">Please enter a valid amount</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Current Amount</label>
+                        <input type="number" id="goalCurrent" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0.00" required step="0.01" min="0">
+                        <div id="goalCurrentError" class="error-message hidden">Please enter a valid amount</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Target Date</label>
+                        <input type="date" id="goalDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <div id="goalDateError" class="error-message hidden">Please select a date</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Category</label>
+                        <select id="goalCategory" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Vacation">Vacation</option>
+                            <option value="Car">Car</option>
+                            <option value="Home">Home</option>
+                            <option value="Education">Education</option>
+                            <option value="Emergency Fund">Emergency Fund</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-medium hover:opacity-90 transition">
+                        Save Goal
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" id="transferModal">
+        <div class="bg-white rounded-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Transfer Funds</h3>
+                    <button class="text-gray-500 hover:text-gray-700" id="closeTransferModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="transferForm">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">From Account</label>
+                        <select id="fromAccount" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                            <option value="">Select account</option>
+                            <option value="Checking">Checking Account</option>
+                            <option value="Savings">Savings Account</option>
+                            <option value="Credit Card">Credit Card</option>
+                        </select>
+                        <div id="fromAccountError" class="error-message hidden">Please select an account</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">To Account</label>
+                        <select id="toAccount" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                            <option value="">Select account</option>
+                            <option value="Checking">Checking Account</option>
+                            <option value="Savings">Savings Account</option>
+                            <option value="Investment">Investment Account</option>
+                        </select>
+                        <div id="toAccountError" class="error-message hidden">Please select an account</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Amount</label>
+                        <input type="number" id="transferAmount" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0.00" required step="0.01" min="0.01">
+                        <div id="transferAmountError" class="error-message hidden">Please enter a valid amount</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Date</label>
+                        <input type="date" id="transferDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <div id="transferDateError" class="error-message hidden">Please select a date</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Description</label>
+                        <input type="text" id="transferDescription" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Optional">
+                    </div>
+                    <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-medium hover:opacity-90 transition">
+                        Transfer Funds
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notificationToast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden transform transition-all duration-300 ease-in-out translate-y-10 opacity-0">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-check-circle"></i>
+            <span id="notificationMessage">Transaction added successfully!</span>
+        </div>
+    </div>
+
+    <script>
+        // Data storage key
+        const STORAGE_KEY = 'fintrack_app_data';
+
+        // Initialize app data with defaults or from localStorage
+        function getInitialData() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                return JSON.parse(savedData);
+            }
+
+            // Default data structure
+            return {
+                user: {
+                    name: "John Doe",
+                    email: "john.doe@example.com",
+                    avatar: "JD"
+                },
+                accounts: {
+                    checking: 8543.21,
+                    savings: 3210.50,
+                    creditCard: -1234.56,
+                    investment: 5678.90
+                },
+                transactions: [
+                    {
+                        id: 1,
+                        amount: -85.25,
+                        category: "Food & Dining",
+                        date: new Date(),
+                        description: "Grocery Shopping",
+                        type: "expense",
+                        account: "Checking"
+                    },
+                    {
+                        id: 2,
+                        amount: 3500.00,
+                        category: "Salary",
+                        date: new Date(new Date().setDate(new Date().getDate() - 1)),
+                        description: "Salary Deposit",
+                        type: "income",
+                        account: "Checking"
+                    },
+                    {
+                        id: 3,
+                        amount: -42.75,
+                        category: "Food & Dining",
+                        date: new Date(new Date().setDate(new Date().getDate() - 2)),
+                        description: "Dinner Out",
+                        type: "expense",
+                        account: "Credit Card"
+                    },
+                    {
+                        id: 4,
+                        amount: -12.50,
+                        category: "Transportation",
+                        date: new Date(new Date().setDate(new Date().getDate() - 3)),
+                        description: "Public Transport",
+                        type: "expense",
+                        account: "Checking"
+                    },
+                    {
+                        id: 5,
+                        amount: -120.00,
+                        category: "Utilities",
+                        date: new Date(new Date().setDate(new Date().getDate() - 4)),
+                        description: "Electric Bill",
+                        type: "expense",
+                        account: "Checking"
+                    }
+                ],
+                budgets: [
+                    {
+                        category: "Housing",
+                        amount: 1000,
+                        spent: 750,
+                        color: "red"
+                    },
+                    {
+                        category: "Food",
+                        amount: 500,
+                        spent: 325,
+                        color: "yellow"
+                    },
+                    {
+                        category: "Transport",
+                        amount: 150,
+                        spent: 75,
+                        color: "blue"
+                    },
+                    {
+                        category: "Entertainment",
+                        amount: 100,
+                        spent: 50,
+                        color: "purple"
+                    }
+                ],
+                goals: [
+                    {
+                        id: 1,
+                        name: "Summer Vacation",
+                        target: 2500,
+                        current: 1200,
+                        date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+                        category: "Vacation",
+                        icon: "fa-umbrella-beach"
+                    },
+                    {
+                        id: 2,
+                        name: "New Car",
+                        target: 15000,
+                        current: 5000,
+                        date: new Date(new Date().setFullYear(new Date().getFullYear() + 2)),
+                        category: "Car",
+                        icon: "fa-car"
+                    },
+                    {
+                        id: 3,
+                        name: "Down Payment",
+                        target: 50000,
+                        current: 8000,
+                        date: new Date(new Date().setFullYear(new Date().getFullYear() + 5)),
+                        category: "Home",
+                        icon: "fa-home"
+                    }
+                ],
+                monthlyIncome: 5432.10,
+                monthlyExpenses: 2345.67
+            };
+        }
+
+        // Save data to localStorage
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // Initialize app data
+        let appData = getInitialData();
+
+        // DOM Elements
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const transactionModal = document.getElementById('transactionModal');
+        const closeModal = document.getElementById('closeModal');
+        const transactionForm = document.getElementById('transactionForm');
+        const goalModal = document.getElementById('goalModal');
+        const closeGoalModal = document.getElementById('closeGoalModal');
+        const goalForm = document.getElementById('goalForm');
+        const transferModal = document.getElementById('transferModal');
+        const closeTransferModal = document.getElementById('closeTransferModal');
+        const transferForm = document.getElementById('transferForm');
+        const notificationToast = document.getElementById('notificationToast');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const transactionsList = document.getElementById('transactionsList');
+        const budgetCategories = document.getElementById('budgetCategories');
+        const goalsList = document.getElementById('goalsList');
+        const timePeriodSelect = document.getElementById('timePeriodSelect');
+
+        // Buttons
+        const addTransactionBtn = document.getElementById('addTransactionBtn');
+        const mobileAddBtn = document.getElementById('mobileAddBtn');
+        const setGoalBtn = document.getElementById('setGoalBtn');
+        const addGoalBtn = document.getElementById('addGoalBtn');
+        const transferBtn = document.getElementById('transferBtn');
+        const viewAllTransactions = document.getElementById('viewAllTransactions');
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            renderTransactions();
+            renderBudgets();
+            renderGoals();
+            initCharts();
+            setupEventListeners();
+        });
+
+        // Initialize the application
+        function initApp() {
+            // Set current date in date inputs
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('transactionDate').value = today;
+            document.getElementById('goalDate').value = today;
+            document.getElementById('transferDate').value = today;
+
+            // Calculate and display totals
+            updateTotals();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Sidebar toggle for mobile
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('sidebar-hidden');
+            });
+
+            // Transaction modal
+            addTransactionBtn.addEventListener('click', showTransactionModal);
+            mobileAddBtn.addEventListener('click', showTransactionModal);
+            closeModal.addEventListener('click', hideTransactionModal);
+            transactionForm.addEventListener('submit', handleTransactionSubmit);
+
+            // Goal modal
+            setGoalBtn.addEventListener('click', showGoalModal);
+            addGoalBtn.addEventListener('click', showGoalModal);
+            closeGoalModal.addEventListener('click', hideGoalModal);
+            goalForm.addEventListener('submit', handleGoalSubmit);
+
+            // Transfer modal
+            transferBtn.addEventListener('click', showTransferModal);
+            closeTransferModal.addEventListener('click', hideTransferModal);
+            transferForm.addEventListener('submit', handleTransferSubmit);
+
+            // View all transactions
+            viewAllTransactions.addEventListener('click', function() {
+                showNotification('Redirecting to all transactions...');
+                // In a real app, this would navigate to a transactions page
+            });
+
+            // Time period select change
+            timePeriodSelect.addEventListener('change', function() {
+                updateCharts(this.value);
+            });
+
+            // Close modals when clicking outside
+            document.addEventListener('click', function(event) {
+                if (event.target === transactionModal) {
+                    hideTransactionModal();
+                }
+                if (event.target === goalModal) {
+                    hideGoalModal();
+                }
+                if (event.target === transferModal) {
+                    hideTransferModal();
+                }
+            });
+
+            // Form validation listeners
+            setupFormValidation();
+        }
+
+        // Setup form validation
+        function setupFormValidation() {
+            // Transaction form validation
+            document.getElementById('transactionAmount').addEventListener('input', function() {
+                validateInput(this, 'amountError');
+            });
+            document.getElementById('transactionCategory').addEventListener('change', function() {
+                validateInput(this, 'categoryError');
+            });
+            document.getElementById('transactionDate').addEventListener('change', function() {
+                validateInput(this, 'dateError');
+            });
+
+            // Goal form validation
+            document.getElementById('goalName').addEventListener('input', function() {
+                validateInput(this, 'goalNameError');
+            });
+            document.getElementById('goalTarget').addEventListener('input', function() {
+                validateInput(this, 'goalTargetError');
+            });
+            document.getElementById('goalCurrent').addEventListener('input', function() {
+                validateInput(this, 'goalCurrentError');
+            });
+            document.getElementById('goalDate').addEventListener('change', function() {
+                validateInput(this, 'goalDateError');
+            });
+
+            // Transfer form validation
+            document.getElementById('fromAccount').addEventListener('change', function() {
+                validateInput(this, 'fromAccountError');
+            });
+            document.getElementById('toAccount').addEventListener('change', function() {
+                validateInput(this, 'toAccountError');
+            });
+            document.getElementById('transferAmount').addEventListener('input', function() {
+                validateInput(this, 'transferAmountError');
+            });
+            document.getElementById('transferDate').addEventListener('change', function() {
+                validateInput(this, 'transferDateError');
+            });
+        }
+
+        // Validate input field
+        function validateInput(input, errorId) {
+            const errorElement = document.getElementById(errorId);
+            
+            if (input.value.trim() === '' || 
+                (input.type === 'number' && (isNaN(input.value) || parseFloat(input.value) <= 0))) {
+                input.classList.add('input-error');
+                errorElement.classList.remove('hidden');
+                return false;
+            } else {
+                input.classList.remove('input-error');
+                errorElement.classList.add('hidden');
+                return true;
+            }
+        }
+
+        // Validate form
+        function validateForm(formId) {
+            let isValid = true;
+            
+            if (formId === 'transactionForm') {
+                isValid = validateInput(document.getElementById('transactionAmount'), 'amountError') && isValid;
+                isValid = validateInput(document.getElementById('transactionCategory'), 'categoryError') && isValid;
+                isValid = validateInput(document.getElementById('transactionDate'), 'dateError') && isValid;
+            } else if (formId === 'goalForm') {
+                isValid = validateInput(document.getElementById('goalName'), 'goalNameError') && isValid;
+                isValid = validateInput(document.getElementById('goalTarget'), 'goalTargetError') && isValid;
+                isValid = validateInput(document.getElementById('goalCurrent'), 'goalCurrentError') && isValid;
+                isValid = validateInput(document.getElementById('goalDate'), 'goalDateError') && isValid;
+                
+                // Additional validation for goal amounts
+                const target = parseFloat(document.getElementById('goalTarget').value);
+                const current = parseFloat(document.getElementById('goalCurrent').value);
+                
+                if (current > target) {
+                    document.getElementById('goalCurrent').classList.add('input-error');
+                    document.getElementById('goalCurrentError').textContent = 'Current amount cannot exceed target';
+                    document.getElementById('goalCurrentError').classList.remove('hidden');
+                    isValid = false;
+                }
+            } else if (formId === 'transferForm') {
+                isValid = validateInput(document.getElementById('fromAccount'), 'fromAccountError') && isValid;
+                isValid = validateInput(document.getElementById('toAccount'), 'toAccountError') && isValid;
+                isValid = validateInput(document.getElementById('transferAmount'), 'transferAmountError') && isValid;
+                isValid = validateInput(document.getElementById('transferDate'), 'transferDateError') && isValid;
+                
+                // Additional validation for transfer accounts
+                const fromAccount = document.getElementById('fromAccount').value;
+                const toAccount = document.getElementById('toAccount').value;
+                
+                if (fromAccount && toAccount && fromAccount === toAccount) {
+                    document.getElementById('toAccount').classList.add('input-error');
+                    document.getElementById('toAccountError').textContent = 'Cannot transfer to the same account';
+                    document.getElementById('toAccountError').classList.remove('hidden');
+                    isValid = false;
+                }
+            }
+            
+            return isValid;
+        }
+
+        // Show transaction modal
+        function showTransactionModal() {
+            transactionModal.classList.remove('hidden');
+            setTimeout(() => {
+                transactionModal.classList.add('fade-in');
+            }, 10);
+        }
+
+        // Hide transaction modal
+        function hideTransactionModal() {
+            transactionModal.classList.add('hidden');
+            transactionModal.classList.remove('fade-in');
+            transactionForm.reset();
+            
+            // Reset validation errors
+            document.querySelectorAll('#transactionForm .error-message').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.querySelectorAll('#transactionForm input, #transactionForm select').forEach(el => {
+                el.classList.remove('input-error');
+            });
+        }
+
+        // Show goal modal
+        function showGoalModal() {
+            goalModal.classList.remove('hidden');
+            setTimeout(() => {
+                goalModal.classList.add('fade-in');
+            }, 10);
+        }
+
+        // Hide goal modal
+        function hideGoalModal() {
+            goalModal.classList.add('hidden');
+            goalModal.classList.remove('fade-in');
+            goalForm.reset();
+            
+            // Reset validation errors
+            document.querySelectorAll('#goalForm .error-message').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.querySelectorAll('#goalForm input, #goalForm select').forEach(el => {
+                el.classList.remove('input-error');
+            });
+        }
+
+        // Show transfer modal
+        function showTransferModal() {
+            transferModal.classList.remove('hidden');
+            setTimeout(() => {
+                transferModal.classList.add('fade-in');
+            }, 10);
+        }
+
+        // Hide transfer modal
+        function hideTransferModal() {
+            transferModal.classList.add('hidden');
+            transferModal.classList.remove('fade-in');
+            transferForm.reset();
+            
+            // Reset validation errors
+            document.querySelectorAll('#transferForm .error-message').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.querySelectorAll('#transferForm input, #transferForm select').forEach(el => {
+                el.classList.remove('input-error');
+            });
+        }
+
+        // Handle transaction form submission
+        function handleTransactionSubmit(e) {
+            e.preventDefault();
+            
+            if (!validateForm('transactionForm')) return;
+            
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
+            const category = document.getElementById('transactionCategory').value;
+            const date = document.getElementById('transactionDate').value;
+            const description = document.getElementById('transactionDescription').value;
+            const type = document.querySelector('input[name="transactionType"]:checked').value;
+            
+            // Create new transaction object
+            const newTransaction = {
+                id: Date.now(), // Use timestamp as unique ID
+                amount: type === 'expense' ? -Math.abs(amount) : Math.abs(amount),
+                category: category,
+                date: new Date(date),
+                description: description || 'No description',
+                type: type,
+                account: "Checking" // Default account for demo
+            };
+            
+            // Add to transactions array
+            appData.transactions.unshift(newTransaction);
+            
+            // Update totals
+            if (type === 'income') {
+                appData.monthlyIncome += amount;
+            } else {
+                appData.monthlyExpenses += amount;
+            }
+            
+            // Update checking account balance
+            appData.accounts.checking += newTransaction.amount;
+            
+            // Save to localStorage
+            saveData(appData);
+            
+            // Update UI
+            updateTotals();
+            renderTransactions();
+            updateCharts(timePeriodSelect.value);
+            
+            // Show notification
+            showNotification('Transaction added successfully!');
+            
+            // Close modal
+            hideTransactionModal();
+        }
+
+        // Handle goal form submission
+        function handleGoalSubmit(e) {
+            e.preventDefault();
+            
+            if (!validateForm('goalForm')) return;
+            
+            const name = document.getElementById('goalName').value;
+            const target = parseFloat(document.getElementById('goalTarget').value);
+            const current = parseFloat(document.getElementById('goalCurrent').value);
+            const date = document.getElementById('goalDate').value;
+            const category = document.getElementById('goalCategory').value;
+            
+            // Determine icon based on category
+            let icon;
+            switch(category) {
+                case 'Vacation':
+                    icon = 'fa-umbrella-beach';
+                    break;
+                case 'Car':
+                    icon = 'fa-car';
+                    break;
+                case 'Home':
+                    icon = 'fa-home';
+                    break;
+                case 'Education':
+                    icon = 'fa-graduation-cap';
+                    break;
+                case 'Emergency Fund':
+                    icon = 'fa-first-aid';
+                    break;
+                default:
+                    icon = 'fa-bullseye';
+            }
+            
+            // Create new goal object
+            const newGoal = {
+                id: Date.now(), // Use timestamp as unique ID
+                name: name,
+                target: target,
+                current: current,
+                date: new Date(date),
+                category: category,
+                icon: icon
+            };
+            
+            // Add to goals array
+            appData.goals.push(newGoal);
+            
+            // Save to localStorage
+            saveData(appData);
+            
+            // Update UI
+            renderGoals();
+            
+            // Show notification
+            showNotification('Goal added successfully!');
+            
+            // Close modal
+            hideGoalModal();
+        }
+
+        // Handle transfer form submission
+        function handleTransferSubmit(e) {
+            e.preventDefault();
+            
+            if (!validateForm('transferForm')) return;
+            
+            const fromAccount = document.getElementById('fromAccount').value;
+            const toAccount = document.getElementById('toAccount').value;
+            const amount = parseFloat(document.getElementById('transferAmount').value);
+            const date = document.getElementById('transferDate').value;
+            const description = document.getElementById('transferDescription').value;
+            
+            // Validate accounts are different
+            if (fromAccount === toAccount) {
+                showNotification('Cannot transfer between the same accounts', 'error');
+                return;
+            }
+            
+            // Validate sufficient funds
+            if (fromAccount === 'Checking' && amount > appData.accounts.checking) {
+                showNotification('Insufficient funds in checking account', 'error');
+                return;
+            } else if (fromAccount === 'Savings' && amount > appData.accounts.savings) {
+                showNotification('Insufficient funds in savings account', 'error');
+                return;
+            } else if (fromAccount === 'Credit Card' && amount > Math.abs(appData.accounts.creditCard)) {
+                showNotification('Credit limit exceeded', 'error');
+                return;
+            }
+            
+            // Perform transfer
+            if (fromAccount === 'Checking') appData.accounts.checking -= amount;
+            if (fromAccount === 'Savings') appData.accounts.savings -= amount;
+            if (fromAccount === 'Credit Card') appData.accounts.creditCard -= amount;
+            
+            if (toAccount === 'Checking') appData.accounts.checking += amount;
+            if (toAccount === 'Savings') appData.accounts.savings += amount;
+            if (toAccount === 'Investment') appData.accounts.investment += amount;
+            
+            // Create transfer transaction
+            const transferTransaction = {
+                id: Date.now(),
+                amount: -amount,
+                category: "Transfer",
+                date: new Date(date),
+                description: description || `Transfer to ${toAccount}`,
+                type: "expense",
+                account: fromAccount
+            };
+            
+            // Add to transactions array
+            appData.transactions.unshift(transferTransaction);
+            
+            // Also add the receiving transaction
+            const receivingTransaction = {
+                id: Date.now() + 1,
+                amount: amount,
+                category: "Transfer",
+                date: new Date(date),
+                description: description || `Transfer from ${fromAccount}`,
+                type: "income",
+                account: toAccount
+            };
+            
+            appData.transactions.unshift(receivingTransaction);
+            
+            // Save to localStorage
+            saveData(appData);
+            
+            // Update totals
+            updateTotals();
+            renderTransactions();
+            
+            // Show notification
+            showNotification('Transfer completed successfully!');
+            
+            // Close modal
+            hideTransferModal();
+        }
+
+        // Show notification toast
+        function showNotification(message, type = 'success') {
+            notificationMessage.textContent = message;
+            
+            // Set color based on type
+            if (type === 'success') {
+                notificationToast.classList.remove('bg-red-500');
+                notificationToast.classList.add('bg-green-500');
+            } else {
+                notificationToast.classList.remove('bg-green-500');
+                notificationToast.classList.add('bg-red-500');
+            }
+            
+            // Show toast
+            notificationToast.classList.remove('hidden');
+            setTimeout(() => {
+                notificationToast.classList.remove('translate-y-10', 'opacity-0');
+                notificationToast.classList.add('translate-y-0', 'opacity-100');
+            }, 10);
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                notificationToast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => {
+                    notificationToast.classList.add('hidden');
+                }, 300);
+            }, 3000);
+        }
+
+        // Update totals display
+        function updateTotals() {
+            const totalBalance = appData.accounts.checking + appData.accounts.savings + 
+                               appData.accounts.investment + appData.accounts.creditCard;
+            
+            document.getElementById('totalBalance').textContent = `$${totalBalance.toFixed(2)}`;
+            document.getElementById('totalIncome').textContent = `$${appData.monthlyIncome.toFixed(2)}`;
+            document.getElementById('totalExpenses').textContent = `$${appData.monthlyExpenses.toFixed(2)}`;
+            document.getElementById('savingsAmount').textContent = `$${appData.accounts.savings.toFixed(2)}`;
+            
+            // Calculate savings progress (demo - assumes goal is $5000)
+            const savingsGoal = 5000;
+            const savingsProgress = (appData.accounts.savings / savingsGoal) * 100;
+            document.getElementById('savingsProgress').style.width = `${Math.min(savingsProgress, 100)}%`;
+            
+            // Calculate budget progress
+            const monthlyBudget = 1500;
+            const budgetSpent = appData.budgets.reduce((total, budget) => total + budget.spent, 0);
+            const budgetProgress = (budgetSpent / monthlyBudget) * 100;
+            document.getElementById('budgetProgress').style.width = `${budgetProgress}%`;
+            document.getElementById('monthlyBudget').textContent = `$${monthlyBudget.toFixed(2)}`;
+            document.getElementById('budgetRemaining').textContent = `$${(monthlyBudget - budgetSpent).toFixed(2)} remaining`;
+        }
+
+        // Render transactions list
+        function renderTransactions() {
+            transactionsList.innerHTML = '';
+            
+            // Sort transactions by date (newest first)
+            const sortedTransactions = [...appData.transactions].sort((a, b) => b.date - a.date);
+            
+            // Display only the first 5 transactions for the dashboard
+            const transactionsToShow = sortedTransactions.slice(0, 5);
+            
+            transactionsToShow.forEach(transaction => {
+                const transactionEl = document.createElement('div');
+                transactionEl.className = 'transaction-item bg-gray-50 rounded-lg p-4 flex justify-between items-center transition';
+                
+                const isIncome = transaction.amount > 0;
+                const amountColor = isIncome ? 'text-green-600' : 'text-red-600';
+                const amountSign = isIncome ? '+' : '-';
+                const absoluteAmount = Math.abs(transaction.amount);
+                
+                // Format date
+                const formattedDate = formatDate(transaction.date);
+                
+                // Determine icon and color based on category
+                const categoryConfig = getCategoryConfig(transaction.category);
+                
+                transactionEl.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <div class="${categoryConfig.bgColor} ${categoryConfig.textColor} p-3 rounded-full">
+                            <i class="fas ${categoryConfig.icon}"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">${transaction.description}</p>
+                            <p class="text-sm text-gray-500">${formattedDate}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-medium ${amountColor}">${amountSign}$${absoluteAmount.toFixed(2)}</p>
+                        <p class="text-xs text-gray-500">${transaction.category}</p>
+                    </div>
+                `;
+                
+                transactionsList.appendChild(transactionEl);
+            });
+        }
+
+        // Render budget categories
+        function renderBudgets() {
+            budgetCategories.innerHTML = '';
+            
+            appData.budgets.forEach(budget => {
+                const progress = (budget.spent / budget.amount) * 100;
+                const remaining = budget.amount - budget.spent;
+                
+                const budgetEl = document.createElement('div');
+                budgetEl.innerHTML = `
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-medium">${budget.category}</span>
+                            <span class="text-sm text-gray-500">$${budget.spent.toFixed(2)}/$${budget.amount.toFixed(2)}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-${budget.color}-500 h-2 rounded-full" style="width: ${progress}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">$${remaining.toFixed(2)} remaining</p>
+                    </div>
+                `;
+                
+                budgetCategories.appendChild(budgetEl);
+            });
+        }
+
+        // Render financial goals
+        function renderGoals() {
+            goalsList.innerHTML = '';
+            
+            appData.goals.forEach(goal => {
+                const progress = (goal.current / goal.target) * 100;
+                const formattedDate = goal.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+                
+                const goalEl = document.createElement('div');
+                goalEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                goalEl.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-blue-100 text-blue-800 p-2 rounded-full">
+                            <i class="fas ${goal.icon}"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">${goal.name}</p>
+                            <p class="text-xs text-gray-500">$${goal.current.toFixed(2)} of $${goal.target.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div class="w-10 h-10 rounded-full border-4 border-blue-200 flex items-center justify-center text-blue-600 font-bold">
+                        ${Math.round(progress)}%
+                    </div>
+                `;
+                
+                goalsList.appendChild(goalEl);
+            });
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // Spending Chart
+            const ctx = document.getElementById('spendingChart').getContext('2d');
+            window.spendingChart = new Chart(ctx, {
+                type: 'bar',
+                data: getChartData('month'),
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update charts based on time period
+        function updateCharts(timePeriod) {
+            if (window.spendingChart) {
+                window.spendingChart.data = getChartData(timePeriod);
+                window.spendingChart.update();
+            }
+        }
+
+        // Get chart data based on time period
+        function getChartData(timePeriod) {
+            // This is simplified for the demo - in a real app you would filter actual transactions
+            let labels, data;
+            
+            if (timePeriod === 'month') {
+                labels = ['Housing', 'Food', 'Transport', 'Entertainment', 'Shopping', 'Utilities'];
+                data = [750, 325, 75, 50, 125, 100];
+            } else if (timePeriod === 'lastMonth') {
+                labels = ['Housing', 'Food', 'Transport', 'Entertainment', 'Shopping', 'Utilities'];
+                data = [700, 300, 100, 80, 150, 120];
+            } else { // year
+                labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                data = [1200, 1500, 1300, 1600, 1800, 2000, 2200, 2100, 1900, 1700, 1500, 1300];
+            }
+            
+            return {
+                labels: labels,
+                datasets: [{
+                    label: 'Spending ($)',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.7)',
+                        'rgba(234, 179, 8, 0.7)',
+                        'rgba(59, 130, 246, 0.7)',
+                        'rgba(168, 85, 247, 0.7)',
+                        'rgba(20, 184, 166, 0.7)',
+                        'rgba(99, 102, 241, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(234, 179, 8, 1)',
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(168, 85, 247, 1)',
+                        'rgba(20, 184, 166, 1)',
+                        'rgba(99, 102, 241, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+        }
+
+        // Helper function to format date
+        function formatDate(date) {
+            if (!(date instanceof Date)) {
+                date = new Date(date);
+            }
+            
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+        }
+
+        // Helper function to get category configuration
+        function getCategoryConfig(category) {
+            const config = {
+                icon: 'fa-wallet',
+                bgColor: 'bg-gray-100',
+                textColor: 'text-gray-800'
+            };
+            
+            switch(category) {
+                case 'Food & Dining':
+                    config.icon = 'fa-utensils';
+                    config.bgColor = 'bg-purple-100';
+                    config.textColor = 'text-purple-800';
+                    break;
+                case 'Transportation':
+                    config.icon = 'fa-bus';
+                    config.bgColor = 'bg-yellow-100';
+                    config.textColor = 'text-yellow-800';
+                    break;
+                case 'Housing':
+                    config.icon = 'fa-home';
+                    config.bgColor = 'bg-red-100';
+                    config.textColor = 'text-red-800';
+                    break;
+                case 'Entertainment':
+                    config.icon = 'fa-film';
+                    config.bgColor = 'bg-blue-100';
+                    config.textColor = 'text-blue-800';
+                    break;
+                case 'Shopping':
+                    config.icon = 'fa-shopping-bag';
+                    config.bgColor = 'bg-green-100';
+                    config.textColor = 'text-green-800';
+                    break;
+                case 'Utilities':
+                    config.icon = 'fa-bolt';
+                    config.bgColor = 'bg-indigo-100';
+                    config.textColor = 'text-indigo-800';
+                    break;
+                case 'Salary':
+                    config.icon = 'fa-dollar-sign';
+                    config.bgColor = 'bg-green-100';
+                    config.textColor = 'text-green-800';
+                    break;
+                case 'Transfer':
+                    config.icon = 'fa-exchange-alt';
+                    config.bgColor = 'bg-blue-100';
+                    config.textColor = 'text-blue-800';
+                    break;
+            }
+            
+            return config;
+        }
+    </script>
+</body>
+</html>
